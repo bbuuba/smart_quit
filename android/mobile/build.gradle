@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        google()  // or mavenCentral(), jcenter() depending on your setup
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.2'
+        // other dependencies
+    }
+}
+
+plugins {
+    id 'com.android.library'
+//    id 'com.chaquo.python'
+}
+
+android {
+    compileSdk 33
+    defaultConfig {
+
+        minSdkVersion 30
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            // Specify ABI filters for the NDK
+            abiFilters "arm64-v8a", "x86_64"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+//chaquopy {
+//    defaultConfig {
+//        version = "3.12"
+//    }
+//}
+//
+//
+
+
+
+
+    // Add product flavors or source sets configurations if necessary
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    wearApp project(':wear')
+    implementation ("androidx.appcompat:appcompat:1.6.1")
+    implementation ("com.google.android.gms:play-services-wearable:18.0.0")
+
+
+
+
+
+}

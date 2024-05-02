@@ -1,0 +1,78 @@
+buildscript {
+    repositories {
+        google()  // or mavenCentral(), jcenter() depending on your setup
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.2'
+        // other dependencies
+    }
+}
+
+
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+android {
+    namespace "com.example.fututi_mortii_matii"
+    compileSdk 34
+
+
+
+    dataBinding {
+        enabled = true
+    }
+
+    defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId "edu.cs4730.wearabledatalayer3"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
+        minSdkVersion 30
+        targetSdkVersion 33
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        ndkVersion "25.1.8937393"
+
+    }
+
+    buildTypes {
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+}
+
+flutter {
+    source '../..'
+}
+dependencies {
+    implementation project(':mobile')
+    implementation ("com.google.android.gms:play-services-wearable:18.0.0")
+    wearApp project(':wear')
+
+
+}
