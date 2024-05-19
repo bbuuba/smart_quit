@@ -12,6 +12,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -21,25 +22,30 @@ import androidx.core.app.NotificationCompat;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.wearable.DataClient;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
-import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
-
-public class SensorService extends Service implements SensorEventListener,
-        DataClient.OnDataChangedListener {
+public class SensorService extends Service implements SensorEventListener{
 
     private final static String TAG = "Wear SensorService";
     private SensorManager sensorManager;
+    PutDataMapRequest dataMap;
     private Sensor accelerometer;
+    private boolean dragValueBool = false; // aici verific daca am mai fost in drag value interval
     private Sensor magnetometer;
     private String datapath = "/data_pathNEW";
     private static final int NOTIFICATION_ID = 123;
     private static final String CHANNEL_ID = "SensorServiceChannel";
+
+    // Variable to store the last time data was sent
+    private long lastDataSentTime = 0;
+
+    // Minimum interval between data transmissions (in milliseconds)
+    private long minDataSendInterval = 500;
+    private int dragValue;
+
+    Algoritm org = new Algoritm();
 
     @Override
     public void onCreate() {
@@ -47,11 +53,15 @@ public class SensorService extends Service implements SensorEventListener,
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        while(magnetometer == null){
+            magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        }
         registerListener();
-        sendData("Service Started");
+        //sendData("Service Started");
 
         // Start the service in the foreground
         startForeground(NOTIFICATION_ID, createNotification());
+
     }
 
     @Override
@@ -63,7 +73,11 @@ public class SensorService extends Service implements SensorEventListener,
     public void onDestroy() {
         super.onDestroy();
         unregisterListener();
-        sendData("Service Stopped");
+        //sendData("Service Stopped");
+
+        if(dataMap != null && !dataMap.getDataMap().isEmpty()) {
+            dataMap.getDataMap().clear();
+        }
     }
 
     @Override
@@ -71,54 +85,42 @@ public class SensorService extends Service implements SensorEventListener,
         return null;
     }
 
+    float[] mGravity;
+    float[] mGeomagnetic;
     @Override
     public void onSensorChanged(SensorEvent event) {
+
         if (event != null) {
-            switch (event.sensor.getType()) {
-                case Sensor.TYPE_ACCELEROMETER:
-                    float xAcc = event.values[0];
-                    float yAcc = event.values[1];
-                    float zAcc = event.values[2];
-                    String dataAcc = "Accelerometer:\nX: " + xAcc + "\nY: " + yAcc + "\nZ: " + zAcc;
-                    sendData(dataAcc); // Sending accelerometer data
-                    break;
-                case Sensor.TYPE_MAGNETIC_FIELD:
-                    float xMag = event.values[0];
-                    float yMag = event.values[1];
-                    float zMag = event.values[2];
-                    String dataMag = "Magnetometer:\nX: " + xMag + "\nY: " + yMag + "\nZ: " + zMag;
-                    sendData(dataMag); // Sending magnetometer data
-                    break;
+            long currentTime = System.currentTimeMillis();
+            // Check if enough time has passed since the last data transmission
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+                mGravity = event.values;
+            if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+                mGeomagnetic = event.values;
+            if(mGravity != null && mGeomagnetic != null) {
+
+                int ans = org.sensorsFunction(mGravity, mGeomagnetic);
+                if(ans == 1 && !dragValueBool){
+                    dragValueBool = true;
+                    dragValue += 1;
+                    Log.d("Drag Value", Integer.toString(dragValue));
+                    sendData("1");
+                }
+                else if(ans == 0 && dragValueBool){
+                    dragValueBool = false;
+                    sendData("0");
+                }
+                //lastDataSentTime = currentTime;
             }
+            //else
+            // sendData("0");
+
         }
     }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Handle accuracy changes if needed
-    }
-
-    @Override
-    public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
-        Log.d(TAG, "onDataChanged: " + dataEventBuffer);
-        for (DataEvent event : dataEventBuffer) {
-            if (event.getType() == DataEvent.TYPE_CHANGED) {
-                String path = event.getDataItem().getUri().getPath();
-                if (datapath.equals(path)) {
-                    DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-                    String message = dataMapItem.getDataMap().getString("message");
-                    Log.v(TAG, "Wear activity received message: " + message);
-                    // Display message in UI
-
-
-                } else {
-                    Log.e(TAG, "Unrecognized path: " + path);
-                }
-            } else if (event.getType() == DataEvent.TYPE_DELETED) {
-                Log.v(TAG, "Data deleted : " + event.getDataItem().toString());
-            } else {
-                Log.e(TAG, "Unknown data event Type = " + event.getType());
-            }
-        }
     }
 
     private void registerListener() {
@@ -130,12 +132,13 @@ public class SensorService extends Service implements SensorEventListener,
         }
     }
 
+
     private void unregisterListener() {
         sensorManager.unregisterListener(this);
     }
 
     private void sendData(String message) {
-        PutDataMapRequest dataMap = PutDataMapRequest.create(datapath);
+        dataMap = PutDataMapRequest.create(datapath);
         dataMap.getDataMap().putString("message", message);
         PutDataRequest request = dataMap.asPutDataRequest();
         request.setUrgent();
@@ -145,7 +148,8 @@ public class SensorService extends Service implements SensorEventListener,
                 .addOnSuccessListener(new OnSuccessListener<DataItem>() {
                     @Override
                     public void onSuccess(DataItem dataItem) {
-                        Log.d(TAG, "Sending message was successful: " + dataItem);
+                        long acum = System.currentTimeMillis();
+                        Log.d(TAG, "Sending message was successful: " + dataItem + " " + acum);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -155,15 +159,13 @@ public class SensorService extends Service implements SensorEventListener,
                     }
                 });
     }
+
     private Notification createNotification() {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon_foreground)
-
-
                 .setContentTitle("Sensor Service")
                 .setContentText("Service is running in the background")
                 .setContentIntent(pendingIntent)

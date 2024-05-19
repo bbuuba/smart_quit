@@ -67,6 +67,7 @@ public class MainActivity extends Activity {
         stopMicrophoneService();
         stopSensorService();
         isServiceRunning = false;
+
     }
 
     private void startMicrophoneService() {

@@ -37,10 +37,11 @@ public class MicrophoneService extends Service {
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
     private static final String TAG = "MicrophoneStreaming";
-    private static final int SAMPLE_RATE = 44100;
-    private static final int BYTES_PER_SAMPLE = 2;
+    private static final int SAMPLE_RATE = 16000;
+    private static final int BYTES_PER_SAMPLE = 4;
     private static final int CHUNK_SIZE = SAMPLE_RATE * BYTES_PER_SAMPLE;
-    private String datapath = "/audio_chunksNEW";
+    private String datapath2 = "/peter";
+    PutDataMapRequest dataMap;
 
     private AudioRecord audioRecord;
     private boolean isRecording = false;
@@ -62,6 +63,7 @@ public class MicrophoneService extends Service {
     public void onCreate() {
         super.onCreate();
         executorService = Executors.newSingleThreadExecutor();
+
     }
 
     @Override
@@ -107,6 +109,9 @@ public class MicrophoneService extends Service {
         stopRecording();
         executorService.shutdown();
         super.onDestroy();
+        if(dataMap != null && !dataMap.getDataMap().isEmpty()) {
+            dataMap.getDataMap().clear();
+        }
     }
 
     public void startRecording() {
@@ -119,17 +124,13 @@ public class MicrophoneService extends Service {
         }
 
         executorService.execute(() -> {
-            int bufferSize = AudioRecord.getMinBufferSize(
-                    SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT
-            );
+            int bufferSize = CHUNK_SIZE;
 
             audioRecord = new AudioRecord(
                     MediaRecorder.AudioSource.MIC,
                     SAMPLE_RATE,
                     AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
+                    AudioFormat.ENCODING_PCM_32BIT,
                     bufferSize
             );
 
@@ -141,7 +142,10 @@ public class MicrophoneService extends Service {
             while (isRecording) {
                 int bytesRead = audioRecord.read(buffer, 0, CHUNK_SIZE);
                 if (bytesRead > 0) {
-                    sendDataChunk(buffer, bytesRead);
+                    int sum = 0;
+                    for(int i = 0; i < bytesRead; i++)sum += buffer[i];
+                    if(buffer != null)
+                        sendDataChunk(buffer, bytesRead);
                 }
             }
         });
@@ -158,16 +162,20 @@ public class MicrophoneService extends Service {
     }
 
     private void sendDataChunk(byte[] chunk, int length) {
-        PutDataMapRequest dataMap = PutDataMapRequest.create(datapath);
-        dataMap.getDataMap().putByteArray("audio_chunk", Arrays.copyOf(chunk, length));
-        PutDataRequest request = dataMap.asPutDataRequest();
-        request.setUrgent();
+        if(length == 64000) {
+            dataMap = PutDataMapRequest.create(datapath2);
+            dataMap.getDataMap().putByteArray("audio_chunk", Arrays.copyOf(chunk, length));
+            PutDataRequest request = dataMap.asPutDataRequest();
+            request.setUrgent();
 
-        Task<DataItem> dataItemTask = Wearable.getDataClient(this).putDataItem(request);
-        dataItemTask.addOnSuccessListener(dataItem -> {
-            Log.d(TAG, "Sent chunk of length " + length);
-        }).addOnFailureListener(e -> {
-            Log.e(TAG, "Failed to send chunk: " + e);
-        });
+            Task<DataItem> dataItemTask = Wearable.getDataClient(this).putDataItem(request);
+            dataItemTask.addOnSuccessListener(dataItem -> {
+                //Log.d(TAG, "Sent chunk of length " + length);
+            }).addOnFailureListener(e -> {
+                //Log.e(TAG, "Failed to send chunk: " + e);
+            });
+        }
     }
 }
+
+
