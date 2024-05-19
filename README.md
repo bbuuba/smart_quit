@@ -1,4 +1,4 @@
-# fututi_mortii_matii
+# smart_quit
 
 A new Flutter project.
 
