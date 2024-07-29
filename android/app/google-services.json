@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "229734724354",
+    "project_id": "iiii-4d022",
+    "storage_bucket": "iiii-4d022.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:229734724354:android:e0fa9f7e14f5a9750f881b",
+        "android_client_info": {
+          "package_name": "edu.cs4730.wearabledatalayer3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbvDORXl_MxyELwbgZA5Is9MYb8yLQWCQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
