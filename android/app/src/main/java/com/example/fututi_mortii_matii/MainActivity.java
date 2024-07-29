@@ -1,5 +1,4 @@
-package com.example.proiect;
-
+package com.example.fututi_mortii_matii;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,8 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.TextView;
 
 import android.app.ActivityManager;
 
@@ -25,14 +22,10 @@ public class MainActivity extends FlutterActivity {
     private MobileService2 org = new MobileService2();
     private long firstDragValue = 0, minTime = 90000, timeOfStarting, minTimeOfSmoking = 300000;//5 min
     private float THRESHOLD = 0.5f;
-    private int cigarettes=0;
+    private int cigarettes = 0;
     private int dragValue;
     private int dragCount = 0;
     private boolean isSmokingNow = false;
-    private TextView vectorBiti;
-    private TextView sensorText;
-    private TextView cigarettesText;
-    private Button toggleServiceButton;
     private Intent serviceIntent;
     private BroadcastReceiver predictionReceiver;
     private BroadcastReceiver dragValueReceiver;
@@ -128,7 +121,8 @@ public class MainActivity extends FlutterActivity {
         //vectorBiti.setText("Prediction: " + prediction); // Update the TextView
         if (!isSmokingNow) {
             if (prediction >= THRESHOLD && dragValue == 1) {
-                cigarettes++;
+                cigarettes = 1;
+                Log.d("tigare!!!!!!!!!!!!!!!!", "cu bricheta");
                 new MethodChannel(getFlutterEngine().getDartExecutor().getBinaryMessenger(), CHANNEL)
                         .invokeMethod("updateCigarettes", cigarettes);
 //                cigarettesText.setText("Cigarettes: " + cigarettes);
@@ -146,11 +140,15 @@ public class MainActivity extends FlutterActivity {
             if (firstDragValue == 0) firstDragValue = System.currentTimeMillis();
             dragValue = dragV;
             dragCount += dragV;
+            Log.d("dragValue", Integer.toString(dragV));
 //            sensorText.setText("Number of drags: " + dragCount);
-            if (dragCount == 10) {
+            if (dragCount == 2) {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - firstDragValue < minTime) {
-                    cigarettes++;
+                    cigarettes = 1;
+                    Log.d("tigare!!!!!!!!!!!!!!!!", "cu miscare");
+                    new MethodChannel(getFlutterEngine().getDartExecutor().getBinaryMessenger(), CHANNEL)
+                            .invokeMethod("updateCigarettes", cigarettes);
 //                    cigarettesText.setText("Cigarettes: " + cigarettes);
                     isSmokingNow = true;
                     timeOfStarting = currentTime;
@@ -165,6 +163,9 @@ public class MainActivity extends FlutterActivity {
     private void reset() {
         if (System.currentTimeMillis() - timeOfStarting >= minTimeOfSmoking) {
             isSmokingNow = false;
+            cigarettes = 0;
+            new MethodChannel(getFlutterEngine().getDartExecutor().getBinaryMessenger(), CHANNEL)
+                    .invokeMethod("updateCigarettes", cigarettes);
         } else {
             dragCount = 0;
             dragValue = 0;

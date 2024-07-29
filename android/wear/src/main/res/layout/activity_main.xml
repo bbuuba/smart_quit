@@ -6,46 +6,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     android:padding="@dimen/box_inset_layout_padding"
     tools:context="edu.cs4730.wearabledatalayer3.MainActivity"
     tools:deviceIds="wear">
-    <TextView
-        android:id="@+id/accelerometerData"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world"/>
-    <TextView
-        android:id="@+id/magnetometerData"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world"/>
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/inner_frame_layout_padding"
-        android:orientation="vertical"
-        app:boxedEdges="all">
+        android:background="#8EB992"> <!-- Background color for the entire screen -->
 
-        <Button
-            android:id="@+id/wrbutton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="send message"/>
-        <Button
-            android:id="@+id/toggleServiceButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Toggle Service" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
+            <Button
+                android:id="@+id/toggleServiceButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Toggle Service"
+                android:background="#84A274"
+                android:textColor="#FFFFFF"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hello_world"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </LinearLayout>
+    </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>
-

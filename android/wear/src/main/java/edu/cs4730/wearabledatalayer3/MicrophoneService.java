@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -29,7 +30,9 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -106,6 +109,7 @@ public class MicrophoneService extends Service {
 
     @Override
     public void onDestroy() {
+
         stopRecording();
         executorService.shutdown();
         super.onDestroy();
@@ -161,8 +165,11 @@ public class MicrophoneService extends Service {
         }
     }
 
+    private List<Uri> dataItemUris = new ArrayList<>(); // List to store URIs
+    private long lastClearTime = System.currentTimeMillis();
+
     private void sendDataChunk(byte[] chunk, int length) {
-        if(length == 64000) {
+        if (length == 64000) {
             dataMap = PutDataMapRequest.create(datapath2);
             dataMap.getDataMap().putByteArray("audio_chunk", Arrays.copyOf(chunk, length));
             PutDataRequest request = dataMap.asPutDataRequest();
@@ -170,12 +177,34 @@ public class MicrophoneService extends Service {
 
             Task<DataItem> dataItemTask = Wearable.getDataClient(this).putDataItem(request);
             dataItemTask.addOnSuccessListener(dataItem -> {
-                //Log.d(TAG, "Sent chunk of length " + length);
+                Log.d(TAG, "Sent chunk of length " + length);
+                Uri dataItemUri = dataItem.getUri();
+                dataItemUris.add(dataItemUri); // Store the URI
+                Log.d(TAG, "DataItem URI: " + dataItemUri.toString());
             }).addOnFailureListener(e -> {
-                //Log.e(TAG, "Failed to send chunk: " + e);
+                Log.e(TAG, "Failed to send chunk: " + e);
             });
+
+            long now = System.currentTimeMillis();
+            if (now - lastClearTime > 5000) {
+                // Delete all stored data items
+                for (Uri uri : dataItemUris) {
+                    Wearable.getDataClient(this).deleteDataItems(uri)
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d(TAG, "Successfully deleted data item with URI: " + uri);
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Failed to delete data item: " + e);
+                            });
+                }
+                dataItemUris.clear(); // Clear the list after deletion
+                lastClearTime = now; // Update the last clear time
+            }
         }
-    }
+
+
+}
+
 }
 
 

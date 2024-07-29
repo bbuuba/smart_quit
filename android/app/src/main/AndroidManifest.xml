@@ -5,10 +5,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
 
     <application
-        android:label="fututi_mortii_matii"
+        android:label="SmartQuit"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         tools:replace="android:label"

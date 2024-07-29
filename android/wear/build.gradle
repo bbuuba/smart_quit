@@ -19,6 +19,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     wearApp project(':wear')
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.gms:play-services-wearable:18.0.0'

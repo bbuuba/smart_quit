@@ -1,4 +1,4 @@
-package com.example.proiect;
+package com.example.fututi_mortii_matii;
 
 import android.app.Service;
 import android.content.Context;
@@ -40,6 +40,7 @@ public class MobileService2 extends Service implements DataClient.OnDataChangedL
     private Float THRESHOLD = 0.6f;
     public int bul;
     public byte[] vectorBiti;
+    private long timeForClear = 0;
 
     public String sensorData; // aici ai si accelerometrul si magentometrul intrun string
     //byte[] byteArray; // aici ai bitii in chunkuri de o secunda(sper)
@@ -104,6 +105,7 @@ public class MobileService2 extends Service implements DataClient.OnDataChangedL
     @Override
     public void onDestroy() {
         Wearable.getDataClient(this).removeListener(this);
+
         super.onDestroy();
         sIsServiceRunning = false;
     }
@@ -124,7 +126,6 @@ public class MobileService2 extends Service implements DataClient.OnDataChangedL
                 if (datapath.equals(path)) {
                     Log.d("100000000000", "10000000000000000");
                     DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-
                     String message = dataMapItem.getDataMap().getString("message");
                     sensorData = message;
                     Log.d("ceva ceva ceva", message);
@@ -140,7 +141,6 @@ public class MobileService2 extends Service implements DataClient.OnDataChangedL
                 }
                 if (datapath2.equals(path)) {
                     DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-
                     vectorBiti = dataMapItem.getDataMap().getByteArray("audio_chunk");
 
                     if (vectorBiti != null) {
@@ -155,9 +155,13 @@ public class MobileService2 extends Service implements DataClient.OnDataChangedL
                         if (prediction > THRESHOLD) {
                             bul = 1;
                         }
-
                         //Log.d(TAG, "NIGGER " + bul);
                     }
+                    long now = System.currentTimeMillis();
+                    if(now - timeForClear >= 5000){
+                        dataMapItem.getDataMap().clear();
+                    }
+
                     // Display message in UI or log
                 }
             }
