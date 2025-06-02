@@ -1,11 +1,3 @@
-SmartQuit
-Creat de :
-
-⦁	Nistor Mario Peter – clasa a 11-a, Colegiul National Gheorghe Munteanu Murgoci
-⦁	Sipica Maria Elena – clasa a 11-a Colegiul National Gheorghe Munteanu Murgoci
-
-Profesori indrumatori: Marin Florina si Paul Prus
-
 
 Problema
 
